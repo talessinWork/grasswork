@@ -77,8 +77,8 @@ export function toAttempt(state: HoldState, meta: { id: string; sessionId: strin
 
 // session/sessionMachine.ts — pure reducer for the session flow
 export type SessionPhase = 'calibrating' | 'framing' | 'instructions' | 'holding' | 'rest' | 'summary' | 'aborted';
-export interface SessionStep { itemIndex: number; set: number; side: Side | null; stretchId: string; holdS: number; }
-export interface SessionState { phase: SessionPhase; plan: DayPlan; steps: SessionStep[]; stepIndex: number; attempts: AttemptRecord[]; restUntil: number | null; startedAt: number; skippedStretchIds: string[]; }
+export interface SessionStep { itemIndex: number; set: number; side: Side | null; stretchId: string; holdS: number; view?: CameraView /* filled by buildSteps */; }
+export interface SessionState { phase: SessionPhase; plan: DayPlan; steps: SessionStep[]; stepIndex: number; attempts: AttemptRecord[]; restUntil: number | null; startedAt: number; skippedStretchIds: string[]; restS?: number /* default 15 */; }
 export type SessionEvent =
   | { type: 'CALIBRATED' } | { type: 'FRAMING_OK' } | { type: 'START_HOLD' }
   | { type: 'HOLD_DONE'; attempt: AttemptRecord; now: number }

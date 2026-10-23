@@ -186,4 +186,4 @@ Expo local module + VisionCamera frame-processor plugin named `detectPose`, Swif
 model files `pose_landmarker_lite.task` / `pose_landmarker_full.task` loaded from app assets (document the download in the module README).
 
 ## Wave 2 · Services — `src/services/`
-`src/services/app.ts`: `createAppServices(repo: Repo, notifications: NotificationAdapter): AppServices`, built only from A, C, D. Tests with the memory repo and a fake adapter.
+`src/services/app.ts`: `createAppServices(repo: Repo, notifications: NotificationAdapter, opts?: { random?: () => number; clock?: () => number }): AppServices`, built only from A, C, D. Tests with the memory repo and a fake adapter.

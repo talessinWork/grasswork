@@ -14,10 +14,10 @@ import { requireOptionalNativeModule } from 'expo';
 
 export type PoseModel = 'lite' | 'full';
 
-/** The shape the native `detectPose` plugin returns for one frame (or null when no person). */
+/** The shape the native `detectPose` plugin returns for one frame. */
 export interface NativePoseResult {
-  /** 33 MediaPipe landmarks, normalized to the upright (oriented) image, origin top-left. */
-  landmarks: { x: number; y: number; z: number; visibility: number }[];
+  /** 33 MediaPipe landmarks, normalized to the upright (oriented) image, origin top-left; null when no person. */
+  landmarks: { x: number; y: number; z: number; visibility: number }[] | null;
   /** width / height of the oriented image the landmarks are normalized to. */
   aspect: number;
   /** strictly increasing ms timestamp that was handed to MediaPipe for this frame. */

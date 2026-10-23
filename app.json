@@ -16,15 +16,33 @@
     },
     "android": {
       "package": "com.talessin.grasswork",
-      "permissions": ["android.permission.CAMERA", "android.permission.POST_NOTIFICATIONS", "android.permission.SCHEDULE_EXACT_ALARM"]
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ]
     },
     "plugins": [
       "expo-router",
       "expo-sqlite",
       "expo-font",
-      ["expo-notifications", { "color": "#3F7556" }],
-      ["react-native-vision-camera", { "cameraPermissionText": "Grasswork watches your stretches to verify each hold. Video never leaves your phone.", "enableMicrophonePermission": false }]
+      [
+        "expo-notifications",
+        {
+          "color": "#3F7556"
+        }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Grasswork watches your stretches to verify each hold. Video never leaves your phone.",
+          "enableMicrophonePermission": false
+        }
+      ],
+      "./modules/pose-landmarker/app.plugin.js"
     ],
-    "experiments": { "typedRoutes": true }
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "pose-landmarker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Grasswork: on-device MediaPipe Pose Landmarker exposed as a VisionCamera frame-processor plugin (`detectPose`).",
+  "main": "index.ts",
+  "types": "index.ts",
+  "license": "MIT",
+  "peerDependencies": {
+    "expo": "*",
+    "react-native-vision-camera": ">=4.5.0",
+    "react-native-worklets-core": ">=1.3.0"
+  }
+}

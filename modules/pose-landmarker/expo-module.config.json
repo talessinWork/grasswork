@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["PoseLandmarkerModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.grassworkpose.PoseLandmarkerModule"]
+  }
+}

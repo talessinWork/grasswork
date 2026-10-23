@@ -1,0 +1,11 @@
+node_modules/
+.expo/
+dist/
+web-build/
+ios/
+android/
+*.log
+.DS_Store
+expo-env.d.ts
+# MediaPipe model files are downloaded, not committed (see modules/pose-landmarker/README.md)
+assets/models/*.task

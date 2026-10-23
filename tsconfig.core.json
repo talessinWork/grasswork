@@ -1,0 +1,18 @@
+{
+  "//": "Type-checks the pure logic (src/core, src/services) without React Native installed. Used in CI and by the builders.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "types": []
+  },
+  "include": ["src/core/**/*.ts", "src/services/**/*.ts", "types/bun-test.d.ts"],
+  "exclude": ["src/core/reminders/expoAdapter.ts", "src/core/db/sqliteRepo.ts", "**/*.test.ts"]
+}

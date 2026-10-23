@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Grasswork",
+    "slug": "grasswork",
+    "scheme": "grasswork",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.talessin.grasswork",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Grasswork watches your stretches to verify each hold. Video never leaves your phone."
+      }
+    },
+    "android": {
+      "package": "com.talessin.grasswork",
+      "permissions": ["android.permission.CAMERA", "android.permission.POST_NOTIFICATIONS", "android.permission.SCHEDULE_EXACT_ALARM"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-font",
+      ["expo-notifications", { "color": "#3F7556" }],
+      ["react-native-vision-camera", { "cameraPermissionText": "Grasswork watches your stretches to verify each hold. Video never leaves your phone.", "enableMicrophonePermission": false }]
+    ],
+    "experiments": { "typedRoutes": true }
+  }
+}

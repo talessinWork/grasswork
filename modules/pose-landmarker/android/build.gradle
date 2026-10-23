@@ -1,0 +1,32 @@
+plugins {
+  id 'com.android.library'
+  // Expo SDK 52+ module plugin: applies Kotlin, expo-modules-core deps and publishing config.
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.grassworkpose'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.grassworkpose"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  // VisionCamera's Frame / FrameProcessorPlugin / FrameProcessorPluginRegistry.
+  implementation project(':react-native-vision-camera')
+
+  // VisionCamera declares CameraX as `implementation`, so ImageProxy isn't on our compile
+  // classpath transitively. compileOnly keeps VisionCamera's own runtime version in charge.
+  // FIRST-BUILD CHECK: if you get duplicate-class / NoSuchMethod errors, align this with the
+  // CameraX version in node_modules/react-native-vision-camera/android/build.gradle.
+  compileOnly "androidx.camera:camera-core:1.4.2"
+
+  implementation 'com.google.mediapipe:tasks-vision:0.10.14'
+}

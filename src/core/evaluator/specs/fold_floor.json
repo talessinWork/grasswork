@@ -1,0 +1,45 @@
+{
+  "id": "fold_floor",
+  "goalId": "forward_fold",
+  "level": 3,
+  "rank": "Floor",
+  "name": "Fold to floor",
+  "view": "side",
+  "perSide": false,
+  "required": [
+    "shoulder",
+    "hip",
+    "knee",
+    "ankle",
+    "heel",
+    "index"
+  ],
+  "rules": [
+    {
+      "id": "straight_knees",
+      "metric": "kneeAngle",
+      "op": ">=",
+      "value": 165,
+      "cue": "Straighten your knees"
+    },
+    {
+      "id": "reach",
+      "metric": "fingertipToFloor",
+      "op": "<=",
+      "value": 0.15,
+      "cue": "Reach lower"
+    },
+    {
+      "id": "hinge",
+      "metric": "hipAngle",
+      "op": "<",
+      "value": 130,
+      "cue": "Fold at your hips"
+    }
+  ],
+  "depthMetric": "fingertipToFloor",
+  "depthBetter": "lower",
+  "targetDepth": 0.0,
+  "defaultHoldS": 35,
+  "instructions": "Hinge forward with straight legs and touch the floor with your fingertips."
+}

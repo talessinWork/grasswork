@@ -1,0 +1,45 @@
+{
+  "id": "fold_shins",
+  "goalId": "forward_fold",
+  "level": 1,
+  "rank": "Shins",
+  "name": "Fold to shins",
+  "view": "side",
+  "perSide": false,
+  "required": [
+    "shoulder",
+    "hip",
+    "knee",
+    "ankle",
+    "heel",
+    "index"
+  ],
+  "rules": [
+    {
+      "id": "straight_knees",
+      "metric": "kneeAngle",
+      "op": ">=",
+      "value": 165,
+      "cue": "Straighten your knees"
+    },
+    {
+      "id": "reach",
+      "metric": "fingertipToFloor",
+      "op": "<=",
+      "value": 0.8,
+      "cue": "Reach lower"
+    },
+    {
+      "id": "hinge",
+      "metric": "hipAngle",
+      "op": "<",
+      "value": 130,
+      "cue": "Fold at your hips"
+    }
+  ],
+  "depthMetric": "fingertipToFloor",
+  "depthBetter": "lower",
+  "targetDepth": 0.6,
+  "defaultHoldS": 30,
+  "instructions": "Hinge forward with straight legs and reach down to mid-shin."
+}

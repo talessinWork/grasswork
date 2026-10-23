@@ -1,0 +1,36 @@
+{
+  "id": "couch_stretch",
+  "goalId": null,
+  "level": 0,
+  "rank": null,
+  "name": "Couch stretch",
+  "view": "side",
+  "perSide": true,
+  "required": [
+    "shoulder",
+    "hip",
+    "knee",
+    "ankle"
+  ],
+  "rules": [
+    {
+      "id": "back_thigh",
+      "metric": "backThighVertical",
+      "op": "<",
+      "value": 35,
+      "cue": "Bring your back thigh upright"
+    },
+    {
+      "id": "chest",
+      "metric": "torsoLean",
+      "op": "<",
+      "value": 35,
+      "cue": "Lift your chest"
+    }
+  ],
+  "depthMetric": "backThighVertical",
+  "depthBetter": "lower",
+  "targetDepth": 10,
+  "defaultHoldS": 35,
+  "instructions": "Back knee on the floor against a wall, front foot planted, squeeze your glute and lift your chest."
+}

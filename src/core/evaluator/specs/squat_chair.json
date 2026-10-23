@@ -1,0 +1,45 @@
+{
+  "id": "squat_chair",
+  "goalId": "deep_squat",
+  "level": 0,
+  "rank": "Chair",
+  "name": "Chair squat",
+  "view": "side",
+  "perSide": false,
+  "required": [
+    "shoulder",
+    "hip",
+    "knee",
+    "ankle",
+    "heel",
+    "foot_index"
+  ],
+  "rules": [
+    {
+      "id": "depth",
+      "metric": "hipBelowKnee",
+      "op": ">=",
+      "value": -0.35,
+      "cue": "Sit lower"
+    },
+    {
+      "id": "heels",
+      "metric": "heelLift",
+      "op": "<",
+      "value": 0.1,
+      "cue": "Keep your heels down"
+    },
+    {
+      "id": "chest",
+      "metric": "torsoLean",
+      "op": "<",
+      "value": 60,
+      "cue": "Lift your chest"
+    }
+  ],
+  "depthMetric": "hipBelowKnee",
+  "depthBetter": "higher",
+  "targetDepth": 0.0,
+  "defaultHoldS": 30,
+  "instructions": "Sit back as if onto a chair until your hips reach knee height, heels flat."
+}

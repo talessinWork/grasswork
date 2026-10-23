@@ -1,0 +1,45 @@
+{
+  "id": "squat_curb",
+  "goalId": "deep_squat",
+  "level": 2,
+  "rank": "Curb",
+  "name": "Curb squat",
+  "view": "side",
+  "perSide": false,
+  "required": [
+    "shoulder",
+    "hip",
+    "knee",
+    "ankle",
+    "heel",
+    "foot_index"
+  ],
+  "rules": [
+    {
+      "id": "heels",
+      "metric": "heelLift",
+      "op": "<",
+      "value": 0.08,
+      "cue": "Keep your heels down"
+    },
+    {
+      "id": "depth",
+      "metric": "hipBelowKnee",
+      "op": ">",
+      "value": 0.0,
+      "cue": "Sit lower"
+    },
+    {
+      "id": "knees",
+      "metric": "kneeAngle",
+      "op": "<",
+      "value": 75,
+      "cue": "Bend your knees more"
+    }
+  ],
+  "depthMetric": "hipBelowKnee",
+  "depthBetter": "higher",
+  "targetDepth": 0.12,
+  "defaultHoldS": 35,
+  "instructions": "Heels flat, sink your hips below your knees as if sitting on a curb."
+}

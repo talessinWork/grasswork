@@ -1,0 +1,45 @@
+{
+  "id": "fold_knees",
+  "goalId": "forward_fold",
+  "level": 0,
+  "rank": "Knees",
+  "name": "Fold to knees",
+  "view": "side",
+  "perSide": false,
+  "required": [
+    "shoulder",
+    "hip",
+    "knee",
+    "ankle",
+    "heel",
+    "index"
+  ],
+  "rules": [
+    {
+      "id": "straight_knees",
+      "metric": "kneeAngle",
+      "op": ">=",
+      "value": 165,
+      "cue": "Straighten your knees"
+    },
+    {
+      "id": "reach",
+      "metric": "fingertipToFloor",
+      "op": "<=",
+      "value": 1.2,
+      "cue": "Reach lower"
+    },
+    {
+      "id": "hinge",
+      "metric": "hipAngle",
+      "op": "<",
+      "value": 130,
+      "cue": "Fold at your hips"
+    }
+  ],
+  "depthMetric": "fingertipToFloor",
+  "depthBetter": "lower",
+  "targetDepth": 1.0,
+  "defaultHoldS": 30,
+  "instructions": "Hinge forward with straight legs and reach your fingertips to your knees."
+}

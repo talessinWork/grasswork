@@ -1,0 +1,45 @@
+{
+  "id": "squat_heels_raised",
+  "goalId": "deep_squat",
+  "level": 1,
+  "rank": "Bench",
+  "name": "Heels-raised squat",
+  "view": "side",
+  "perSide": false,
+  "required": [
+    "shoulder",
+    "hip",
+    "knee",
+    "ankle",
+    "heel",
+    "foot_index"
+  ],
+  "rules": [
+    {
+      "id": "depth",
+      "metric": "hipBelowKnee",
+      "op": ">",
+      "value": -0.05,
+      "cue": "Sit lower"
+    },
+    {
+      "id": "knees",
+      "metric": "kneeAngle",
+      "op": "<",
+      "value": 85,
+      "cue": "Bend your knees more"
+    },
+    {
+      "id": "chest",
+      "metric": "torsoLean",
+      "op": "<",
+      "value": 55,
+      "cue": "Lift your chest"
+    }
+  ],
+  "depthMetric": "hipBelowKnee",
+  "depthBetter": "higher",
+  "targetDepth": 0.1,
+  "defaultHoldS": 30,
+  "instructions": "Put your heels on a book or plate and sink your hips just below your knees."
+}

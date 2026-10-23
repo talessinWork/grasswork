@@ -1,0 +1,31 @@
+{
+  "id": "squat_sit",
+  "goalId": null,
+  "level": 0,
+  "rank": null,
+  "name": "Supported squat sit",
+  "view": "side",
+  "perSide": false,
+  "required": [
+    "shoulder",
+    "hip",
+    "knee",
+    "ankle",
+    "heel",
+    "foot_index"
+  ],
+  "rules": [
+    {
+      "id": "depth",
+      "metric": "hipBelowKnee",
+      "op": ">",
+      "value": 0.0,
+      "cue": "Sit lower"
+    }
+  ],
+  "depthMetric": "hipBelowKnee",
+  "depthBetter": "higher",
+  "targetDepth": 0.2,
+  "defaultHoldS": 40,
+  "instructions": "Hold a doorframe or table leg and relax down into a deep squat."
+}

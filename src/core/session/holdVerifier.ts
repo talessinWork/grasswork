@@ -26,8 +26,11 @@ export interface HoldVerifier {
   reset(): void;
 }
 
-/** Frame gaps longer than this are clamped so a stalled camera can't add hold time. */
-const MAX_FRAME_GAP_MS = 250;
+/**
+ * Frame gaps longer than this are clamped so a stalled camera can't add hold time. 400 ms keeps the
+ * hold running at real speed down to ~2.5 fps of detection on slow phones (review finding 11).
+ */
+const MAX_FRAME_GAP_MS = 400;
 
 export function createHoldVerifier(opts: {
   targetS: number;

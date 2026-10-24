@@ -414,3 +414,62 @@ describe('services edge cases', () => {
     expect(planDetail({ stretchId: couch.id, sets: 1, holdS: 30, goalId: null }, couch)).toBe('30 s each side');
   });
 });
+
+describe('review fixes', () => {
+  async function onboarded() {
+    const w = world();
+    await w.svc.completeOnboarding({ goals: ['deep_squat', 'forward_fold'], settings: SETTINGS });
+    return w;
+  }
+
+  it('a killed session still counts the day once one hold is verified (finding 3)', async () => {
+    const w = await onboarded();
+    const now = atTime(MON, '08:00');
+    const { session, plan } = await w.svc.startSession('daily', now);
+    // one verified hold, then the app is killed: finishSession never runs
+    await w.svc.recordAttempt(attempt(session.id, plan.items[0].stretchId, now + 1000, -0.1, 30));
+    expect((await w.repo.getSession(session.id))!.completed).toBe(true);
+    expect((await w.svc.getHome(atTime(MON, '12:00'))).doneToday).toBe(true);
+
+    // next launch closes the half-open session
+    w.clockNow.t = atTime(MON, '13:00');
+    await w.svc.init();
+    const closed = (await w.repo.getSession(session.id))!;
+    expect(closed.endedAt).toBe(now + 1000 + 30_000);
+    expect(closed.completed).toBe(true);
+
+    // the streak carries into the next day
+    const tue = await w.svc.getHome(atTime(addDays(MON, 1), '07:30'));
+    expect(tue.streak.current).toBe(1);
+  });
+
+  it('a killed session with no verified hold is closed but does not count', async () => {
+    const w = await onboarded();
+    const now = atTime(MON, '08:00');
+    const { session, plan } = await w.svc.startSession('daily', now);
+    await w.svc.recordAttempt(attempt(session.id, plan.items[0].stretchId, now + 1000, -0.1, 3));
+    w.clockNow.t = atTime(MON, '09:00');
+    await w.svc.init();
+    const closed = (await w.repo.getSession(session.id))!;
+    expect(closed.endedAt).not.toBeNull();
+    expect(closed.completed).toBe(false);
+  });
+
+  it('two weekly tests on the same day do not count as two in a row (finding 15)', async () => {
+    const w = await onboarded();
+    const FRI = addDays(MON, 4);
+    const chair = getSpec('squat_chair');
+    // both tests reach the Chair target; before the fix this promoted instantly
+    await doSession(w, 'test', FRI, '08:00', { squat: chair.targetDepth + 0.05 });
+    const second = await doSession(w, 'test', FRI, '09:00', { squat: chair.targetDepth + 0.08 });
+    expect(second.summary.rankUps).toEqual([]);
+    const tests = await w.repo.listTestResults('deep_squat');
+    expect(tests.length).toBe(1);
+    expect(tests[0].bestDepth).toBeCloseTo(chair.targetDepth + 0.08, 5); // keeps the better one
+    expect((await w.repo.listGoals()).find((g) => g.goalId === 'deep_squat')!.currentStretchId).toBe('squat_chair');
+
+    // the next week's passing test is the real second one in a row
+    const next = await doSession(w, 'test', addDays(FRI, 7), '08:00', { squat: chair.targetDepth + 0.05 });
+    expect(next.summary.rankUps.map((r) => r.rank)).toContain('Chair');
+  });
+});

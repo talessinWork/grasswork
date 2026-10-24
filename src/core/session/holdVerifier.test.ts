@@ -105,8 +105,17 @@ describe('holdVerifier', () => {
     const h = createHoldVerifier({ targetS: 10, depthBetter: 'higher' });
     const t0 = enter(h);
     const s = h.push(valid(t0 + 5000));
-    expect(s.heldMs).toBe(250);
+    expect(s.heldMs).toBe(400);
     expect(s.phase).toBe('holding');
+  });
+
+  it('keeps real time at a slow ~3 fps detection rate', () => {
+    const h = createHoldVerifier({ targetS: 10, depthBetter: 'higher' });
+    const t0 = enter(h);
+    let s = h.push(valid(t0 + 333));
+    s = h.push(valid(t0 + 666));
+    s = h.push(valid(t0 + 999));
+    expect(s.heldMs).toBe(999);
   });
 
   it('completes at target and stays complete', () => {

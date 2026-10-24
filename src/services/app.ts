@@ -151,8 +151,21 @@ export function createAppServices(repo: Repo, notifications: NotificationAdapter
 
   const services: AppServices = {
     async init() {
+      const now = clock();
+      // Close sessions left open by a crash, a kill or iOS evicting the app mid-session, so the
+      // verified work still counts and nothing stays half-open (review finding 3).
+      const today = toLocalDate(now);
+      const open = (await repo.listSessions(addDays(today, -30), today)).filter(
+        (s) => s.endedAt === null,
+      );
+      for (const s of open) {
+        const attempts = await repo.listAttemptsForSession(s.id);
+        const verified = attempts.some((a) => a.heldS >= MIN_VERIFIED_S);
+        const endedAt = attempts.reduce((m, a) => Math.max(m, a.endedAt), s.startedAt);
+        await repo.saveSession({ ...s, endedAt, completed: s.completed || verified });
+      }
       const settings = await repo.getSettings();
-      if (settings.onboarded) await syncReminders(clock());
+      if (settings.onboarded) await syncReminders(now);
     },
 
     getSettings: () => repo.getSettings(),
@@ -328,6 +341,12 @@ export function createAppServices(repo: Repo, notifications: NotificationAdapter
       const spec = getSpec(a.stretchId);
       const prevBest = await bestPreviousDepth(spec, new Set([a.id]), Number.POSITIVE_INFINITY);
       await repo.saveAttempt(a);
+      // The day counts the moment one hold is verified, not only when the summary is reached,
+      // so a crash or kill mid-session never costs the streak (review finding 3).
+      if (a.heldS >= MIN_VERIFIED_S) {
+        const session = await repo.getSession(a.sessionId);
+        if (session && !session.completed) await repo.saveSession({ ...session, completed: true });
+      }
       const xp = xpForAttempt(a, spec, prevBest, a.endedAt);
       for (const e of xp) await repo.addXp(e);
       return { xp, personalBest: xp.some((e) => e.source === 'personal_best') };
@@ -361,11 +380,16 @@ export function createAppServices(repo: Repo, notifications: NotificationAdapter
             if (best === null || deeper(spec, a.bestDepth, best)) best = a.bestDepth;
           }
           if (best === null) continue;
-          const prior = (await repo.listTestResults(goal.goalId)).filter((t) => t.stretchId === spec.id);
+          // One result per goal per day (review finding 15): a second test the same day keeps the
+          // better depth instead of adding a second "consecutive" test that would promote instantly.
+          const onStretch = (await repo.listTestResults(goal.goalId)).filter((t) => t.stretchId === spec.id);
+          const sameDay = onStretch.find((t) => t.date === session.date);
+          if (sameDay && !deeper(spec, best, sameDay.bestDepth)) best = sameDay.bestDepth;
+          const prior = onStretch.filter((t) => t.date !== session.date);
           const last = prior.length ? prior[prior.length - 1].bestDepth : null;
-          await repo.saveTestResult({ id: `${sessionId}#${goal.goalId}`, goalId: goal.goalId, stretchId: spec.id, date: session.date, bestDepth: best });
+          await repo.saveTestResult({ id: sameDay?.id ?? `${session.date}#${goal.goalId}`, goalId: goal.goalId, stretchId: spec.id, date: session.date, bestDepth: best });
           if (last === null || deeper(spec, best, last)) {
-            await addXp({ id: `${sessionId}#${goal.goalId}#test`, at: now, source: 'test_beat', amount: TEST_BEAT_XP, ref: goal.goalId });
+            await addXp({ id: `${session.date}#${goal.goalId}#test`, at: now, source: 'test_beat', amount: TEST_BEAT_XP, ref: goal.goalId });
           }
           const tests = await repo.listTestResults(goal.goalId);
           const promo = evaluatePromotion(goal, tests, specsForGoal);

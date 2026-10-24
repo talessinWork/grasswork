@@ -92,7 +92,7 @@ export function currentStep(state: SessionState): SessionStep | null;
 
 // session/cueThrottle.ts
 export interface CueThrottle { next(r: EvalResult, now: number): string | null; reset(): void; }
-export function createCueThrottle(opts?: { minGapMs?: number /*3000*/; sameCueGapMs?: number /*6000*/ }): CueThrottle;
+export function createCueThrottle(opts?: { minGapMs?: number /*3000*/; sameCueGapMs?: number /*6000*/; orientationCue?: string /*'Turn sideways'*/ }): CueThrottle;
 ```
 
 ## C · Progression + game — `src/core/progression/`, `src/core/game/`

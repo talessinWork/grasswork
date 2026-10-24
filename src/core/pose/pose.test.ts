@@ -172,6 +172,27 @@ describe('Calibrator', () => {
     expect(c.push(frame(offscreen, 30)).hint).toBe('Step back until your head shows');
   });
 
+  it('completes when facing the camera even though the more-visible side keeps flipping', () => {
+    // regression: both sides are about equally visible front-on, so picking the side per frame
+    // flipped it and reset the window forever (review finding 1)
+    let seed = 1;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const c = new Calibrator();
+    let doneAt = -1;
+    for (let t = 0; t < 10_000; t += 66) {
+      const pose = front(9 / 16).map((lm) =>
+        lm.visibility > 0 ? { ...lm, visibility: Math.min(1, 0.97 + (rnd() - 0.5) * 0.01) } : lm,
+      );
+      const r = c.push(frame(pose, t, 9 / 16));
+      if (r.status === 'done') {
+        doneAt = t;
+        break;
+      }
+    }
+    expect(doneAt).toBeGreaterThan(1900);
+    expect(doneAt).toBeLessThan(2300);
+  });
+
   it('respects custom durationMs', () => {
     const c = new Calibrator({ durationMs: 500 });
     c.push(frame(stickPose(STANDING), 0));

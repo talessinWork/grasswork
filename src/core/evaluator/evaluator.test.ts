@@ -193,6 +193,26 @@ describe('evaluator', () => {
   });
 });
 
+describe('couch stretch', () => {
+  // rear leg kneeling (knee on the floor, thigh vertical), front leg bent with foot planted
+  const REAR: Joints = { nose: [0.52, 0.36], shoulder: [0.5, 0.41], hip: [0.5, 0.66], knee: [0.5, 0.88], ankle: [0.36, 0.8], heel: [0.35, 0.79], foot_index: [0.34, 0.82] };
+  const FRONT: Joints = { shoulder: [0.5, 0.41], hip: [0.5, 0.66], knee: [0.7, 0.68], ankle: [0.7, 0.88], heel: [0.69, 0.9], foot_index: [0.76, 0.9] };
+  const spec = () => getSpec('couch_stretch');
+
+  it('is not valid while simply standing (review finding 2)', () => {
+    const r = run(spec(), STANDING);
+    expect(r.valid).toBe(false);
+    expect(r.failed).toContain('kneel');
+    expect(r.cues[0]).toBe('Kneel down, back knee on the floor');
+  });
+
+  it('is valid in a real kneeling couch stretch', () => {
+    const r = createEvaluator(spec(), CAL).evaluate(frame(frontPose(REAR, FRONT), 0, 1));
+    expect(r.failed).toEqual([]);
+    expect(r.valid).toBe(true);
+  });
+});
+
 describe('checkFraming', () => {
   const deep = getSpec('deep_squat');
   it('ok when side-on, visible and bright', () => {

@@ -52,7 +52,9 @@ export class Calibrator {
     const pose = frame.landmarks;
     if (!pose) return this.needBody(CALIBRATION_HINTS.noPerson);
 
-    const side = pickSide(pose);
+    // Lock the measured side for the whole still window. Facing the camera, both sides are
+    // about equally visible, and re-picking per frame flipped sides and reset the window forever.
+    const side = this.samples.length > 0 ? this.samples[0].side : pickSide(pose);
     const missing = (j: JointName) => !isVisibleInFrame(pose[jointIndex(j, side)], VIS_THRESHOLD);
     if (FEET.some(missing)) return this.needBody(CALIBRATION_HINTS.feet);
     if (!isVisibleInFrame(pose[0], VIS_THRESHOLD)) return this.needBody(CALIBRATION_HINTS.head);
@@ -61,9 +63,8 @@ export class Calibrator {
 
     const sample = toSample(pose, side, frame);
     if (this.samples.length > 0) {
-      const ref = this.samples[0];
       const mean = meanPts(this.samples.map((s) => s.pts));
-      const jitter = ref.side !== side ? Infinity : maxDeviation(sample.pts, mean, frame.aspect);
+      const jitter = maxDeviation(sample.pts, mean, frame.aspect);
       if (jitter > this.maxJitter) {
         this.samples = [sample];
         return { status: 'hold_still', progress: 0, hint: CALIBRATION_HINTS.still, calibration: null };

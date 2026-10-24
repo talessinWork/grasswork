@@ -14,6 +14,13 @@ describe('cueThrottle', () => {
     expect(c.next(ev({ cues: ['Sit lower'] }), 0)).toBe('Sit lower');
   });
 
+  it('says "Turn sideways" first when visible but facing the wrong way', () => {
+    const c = createCueThrottle();
+    expect(c.next(ev({ orientationOk: false, cues: [] }), 0)).toBe('Turn sideways');
+    expect(c.next(ev({ orientationOk: false, cues: ['Sit lower'] }), 3000)).toBe('Sit lower');
+    expect(createCueThrottle({ orientationCue: 'Face the camera' }).next(ev({ orientationOk: false }), 0)).toBe('Face the camera');
+  });
+
   it('prioritises the first cue and enforces minGap', () => {
     const c = createCueThrottle();
     expect(c.next(ev({ cues: ['A', 'B'] }), 0)).toBe('A');

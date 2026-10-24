@@ -14,6 +14,13 @@
   ],
   "rules": [
     {
+      "id": "kneel",
+      "metric": "hipHeight",
+      "op": "<",
+      "value": 1.25,
+      "cue": "Kneel down, back knee on the floor"
+    },
+    {
       "id": "back_thigh",
       "metric": "backThighVertical",
       "op": "<",

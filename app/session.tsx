@@ -3,6 +3,7 @@
  * calibrating → framing → instructions → holding → rest → summary.
  * Camera permission is asked here, the first time it is needed, with a friendly explainer.
  */
+import { useKeepAwake } from 'expo-keep-awake';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { BackHandler, Linking, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -28,6 +29,8 @@ import { color, layout } from '../src/ui/theme';
 import type { SessionKind } from '../src/core/types';
 
 export default function SessionScreen() {
+  // the phone sits on the floor untouched for minutes; don't let it sleep mid-hold
+  useKeepAwake();
   const params = useLocalSearchParams<{ kind?: string }>();
   const kind = parseKind(params.kind);
   const router = useRouter();

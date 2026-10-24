@@ -1,5 +1,5 @@
 /** Instructions before a hold, the rest screen (previewing the next pose), and the pause sheet. */
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getSpec } from '../../core/evaluator/specs/index';
 import type { SessionStep } from '../../core/session/sessionMachine';
@@ -19,7 +19,7 @@ function stepLine(step: SessionStep, spec: StretchSpec, sets: number): string {
   return parts.join(' · ');
 }
 
-export function InstructionsSheet({ step, spec, sets, onReady, onSkip, bottom }: { step: SessionStep; spec: StretchSpec; sets: number; onReady(): void; onSkip(): void; bottom: number }) {
+function InstructionsSheetImpl({ step, spec, sets, onReady, onSkip, bottom }: { step: SessionStep; spec: StretchSpec; sets: number; onReady(): void; onSkip(): void; bottom: number }) {
   return (
     <FadeIn style={[styles.sheet, { bottom }]}>
       <View style={styles.row}>
@@ -40,7 +40,7 @@ export function InstructionsSheet({ step, spec, sets, onReady, onSkip, bottom }:
   );
 }
 
-export function RestPanel({ top, restUntil, next, onSkip, bottom }: { top: number; restUntil: number | null; next: SessionStep | null; onSkip(): void; bottom: number }) {
+function RestPanelImpl({ top, restUntil, next, onSkip, bottom }: { top: number; restUntil: number | null; next: SessionStep | null; onSkip(): void; bottom: number }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 250);
@@ -83,7 +83,7 @@ export function RestPanel({ top, restUntil, next, onSkip, bottom }: { top: numbe
   );
 }
 
-export function PauseSheet({ onResume, onSkip, onEnd, bottom }: { onResume(): void; onSkip(): void; onEnd(): void; bottom: number }) {
+function PauseSheetImpl({ onResume, onSkip, onEnd, bottom }: { onResume(): void; onSkip(): void; onEnd(): void; bottom: number }) {
   return (
     <View style={styles.scrim} accessibilityViewIsModal>
       <FadeIn style={[styles.sheet, { bottom }]}>
@@ -115,3 +115,8 @@ const styles = StyleSheet.create({
   },
   scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: color.cameraScrim },
 });
+
+/** memoized: the session screen re-renders on phase / live changes, not per frame */
+export const InstructionsSheet = memo(InstructionsSheetImpl);
+export const RestPanel = memo(RestPanelImpl);
+export const PauseSheet = memo(PauseSheetImpl);

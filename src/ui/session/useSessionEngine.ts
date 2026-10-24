@@ -1,18 +1,21 @@
 /**
- * Session glue: pose frames → PoseSmoother → Calibrator → checkFraming → createEvaluator → createHoldVerifier → createCueThrottle,
+ * Session glue: pose frames → Calibrator → checkFraming → createEvaluator → createHoldVerifier → createCueThrottle,
  * with the flow driven by the pure reduceSession. Every rule lives in src/core; this hook only wires them to React,
  * speech, haptics and AppServices (startSession / recordAttempt / finishSession).
  *
  * Frame-rate state (the latest pose) goes to a FrameStore so only the skeleton re-renders per frame;
- * the rest of the UI gets a small `live` snapshot.
+ * the rest of the UI gets small `setup` / `live` snapshots that are only replaced when something visible
+ * changes (phase, valid flag, cue, failed rules, progress / depth at 1 % steps), not on every frame.
+ *
+ * Frames are NOT smoothed here: the evaluator smooths internally, and the skeleton draws the raw pose.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import type { Calibration, EvalResult, PoseFrame, SessionKind, StretchSpec } from '../../core/types';
 import { getSpec } from '../../core/evaluator/specs/index';
 import { checkFraming, type FramingCheck } from '../../core/evaluator/framing';
 import { createEvaluator, type Evaluator } from '../../core/evaluator/evaluate';
 import { Calibrator } from '../../core/pose/calibration';
-import { PoseSmoother } from '../../core/pose/oneEuro';
 import { createHoldVerifier, toAttempt, type HoldState, type HoldVerifier } from '../../core/session/holdVerifier';
 import { createCueThrottle } from '../../core/session/cueThrottle';
 import {
@@ -26,6 +29,7 @@ import {
 import { newId } from '../../core/util';
 import type { SummaryVM } from '../../services/contract';
 import { useServices, useSettings } from '../ServicesProvider';
+import { depthFraction } from './display';
 import { createFrameStore } from './frameStore';
 import { hapticHoldDone, hapticHoldStart, hush, say } from './voice';
 
@@ -51,6 +55,23 @@ export interface LiveUI {
   cue: string | null;
 }
 
+/** Identity of what the setup panels show; equal keys mean the previous SetupUI object can be kept. */
+function setupKey(u: SetupUI): string {
+  const f = u.framing;
+  const fk = f ? `${+f.wholeBody}${+f.orientation}${+f.light}${+f.ok}|${f.hint ?? ''}` : '-';
+  return `${u.hint ?? ''}|${fk}|${+u.calibrated}|${Math.round(u.calProgress * 100)}`;
+}
+
+/** Identity of what the hold panels show (see LiveUI). */
+function liveKey(u: LiveUI, spec: StretchSpec | null): string {
+  const r = u.result;
+  const h = u.hold;
+  const rk = r ? `${+r.visible}${+r.orientationOk}${+r.valid}|${[...r.failed].sort().join(',')}|${spec ? Math.round(depthFraction(spec, r.depth) * 100) : ''}` : '-';
+  const best = h?.bestDepth != null && spec ? Math.round(depthFraction(spec, h.bestDepth) * 100) : '';
+  const hk = h ? `${h.phase}|${Math.round(h.progress * 100)}|${best}` : '-';
+  return `${rk}|${hk}|${u.cue ?? ''}`;
+}
+
 export function useSessionEngine(kind: SessionKind) {
   const services = useServices();
   const { settings } = useSettings();
@@ -71,7 +92,6 @@ export function useSessionEngine(kind: SessionKind) {
   const sessionIdRef = useRef<string | null>(null);
   const pausedRef = useRef(false);
   const voiceRef = useRef(true);
-  const smoother = useRef(new PoseSmoother()).current;
   const calibrator = useRef(new Calibrator()).current;
   const throttle = useRef(createCueThrottle()).current;
   const calRef = useRef<Calibration | null>(null);
@@ -84,11 +104,31 @@ export function useSessionEngine(kind: SessionKind) {
   const lastHintRef = useRef<{ text: string | null; at: number }>({ text: null, at: 0 });
   const writesRef = useRef<Promise<unknown>[]>([]);
   const finishedRef = useRef(false);
+  const setupRef = useRef<SetupUI>({ hint: null, framing: null, calibrated: false, calProgress: 0 });
+  const setupKeyRef = useRef(setupKey(setupRef.current));
+  const liveRef = useRef<LiveUI>({ result: null, hold: null, cue: null });
+  const liveKeyRef = useRef(liveKey(liveRef.current, null));
 
   voiceRef.current = !!settings?.voiceCues && !muted;
 
   const speak = useCallback((text: string) => {
     if (voiceRef.current) say(text);
+  }, []);
+
+  /** setState only when the visible content changed (frames arrive ~15×/s) */
+  const commitSetup = useCallback((next: SetupUI) => {
+    const k = setupKey(next);
+    setupRef.current = next;
+    if (k === setupKeyRef.current) return;
+    setupKeyRef.current = k;
+    setSetup(next);
+  }, []);
+  const commitLive = useCallback((next: LiveUI, sp: StretchSpec | null) => {
+    const k = liveKey(next, sp);
+    liveRef.current = next;
+    if (k === liveKeyRef.current) return;
+    liveKeyRef.current = k;
+    setLive(next);
   }, []);
 
   const dispatch = useCallback((ev: SessionEvent) => {
@@ -181,7 +221,8 @@ export function useSessionEngine(kind: SessionKind) {
     (raw: PoseFrame) => {
       const s = sessionRef.current;
       if (!s || pausedRef.current) return;
-      const frame = smoother.smooth(raw);
+      // raw frame: the evaluator smooths internally, the skeleton shows the latest raw pose
+      const frame = raw;
       frames.set(frame);
       const st = currentStep(s);
       const sp = st ? getSpec(st.stretchId) : null;
@@ -198,7 +239,7 @@ export function useSessionEngine(kind: SessionKind) {
         case 'calibrating': {
           const cp = calibrator.push(frame);
           const fc = sp ? checkFraming(frame, sp) : null;
-          setSetup({ hint: cp.hint, framing: fc, calibrated: cp.status === 'done', calProgress: cp.progress });
+          commitSetup({ hint: cp.hint, framing: fc, calibrated: cp.status === 'done', calProgress: cp.progress });
           if (cp.status === 'need_body') maybeSpeakHint(cp.hint);
           if (cp.status === 'done' && cp.calibration) {
             calRef.current = cp.calibration;
@@ -209,7 +250,7 @@ export function useSessionEngine(kind: SessionKind) {
         case 'framing': {
           if (!sp) break;
           const fc = checkFraming(frame, sp);
-          setSetup((prev) => ({ ...prev, hint: fc.hint, framing: fc, calibrated: true, calProgress: 1 }));
+          commitSetup({ ...setupRef.current, hint: fc.hint, framing: fc, calibrated: true, calProgress: 1 });
           if (fc.ok) {
             if (framingOkSinceRef.current == null) framingOkSinceRef.current = frame.t;
             else if (frame.t - framingOkSinceRef.current >= FRAMING_SETTLE_MS) {
@@ -231,9 +272,12 @@ export function useSessionEngine(kind: SessionKind) {
           const isLive = hs.phase === 'holding';
           if (isLive && !holdLiveRef.current && hs.heldMs === 0) hapticHoldStart();
           holdLiveRef.current = isLive;
-          const cue = throttle.next(r, Date.now());
+          // While the verifier waits for the person to stand up first, the ring says "stand up, then sink in";
+          // rule cues ("bend your knees more") would contradict it, so they start from 'await_entry'.
+          const cue = hs.phase === 'await_standing' ? null : throttle.next(r, Date.now());
           if (cue) speak(cue);
-          setLive((prev) => ({ result: r, hold: hs, cue: cue ?? (r.valid ? null : prev.cue) }));
+          const prevCue = hs.phase === 'await_standing' ? null : liveRef.current.cue;
+          commitLive({ result: r, hold: hs, cue: cue ?? (r.valid ? null : prevCue) }, sp);
           if (hs.phase === 'complete') finishHold(false);
           break;
         }
@@ -241,7 +285,7 @@ export function useSessionEngine(kind: SessionKind) {
           break;
       }
     },
-    [calibrator, dispatch, finishHold, frames, smoother, speak, throttle],
+    [calibrator, commitLive, commitSetup, dispatch, finishHold, frames, speak, throttle],
   );
 
   // ---------------------------------------------------------------------------
@@ -267,7 +311,7 @@ export function useSessionEngine(kind: SessionKind) {
         evaluatorRef.current = createEvaluator(sp, calRef.current);
         verifierRef.current = createHoldVerifier({ targetS: st.holdS, depthBetter: sp.depthBetter });
         throttle.reset();
-        setLive({ result: null, hold: null, cue: null });
+        commitLive({ result: null, hold: null, cue: null }, sp);
         const side = st.side ? ` ${st.side} side.` : '';
         speak(`${sp.name}.${side} ${sp.instructions}`);
         return;
@@ -338,6 +382,19 @@ export function useSessionEngine(kind: SessionKind) {
     setPausedState(p);
     if (p) hush();
   }, []);
+
+  // Leaving the app mid-session pauses it: the phase timers stop (they depend on `paused`), speech stops,
+  // and the screen drops the camera (isActive). The user resumes from the pause sheet on return.
+  const statusRef = useRef(status);
+  statusRef.current = status;
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if ((next === 'background' || next === 'inactive') && statusRef.current === 'running' && !pausedRef.current) {
+        setPaused(true);
+      }
+    });
+    return () => sub.remove();
+  }, [setPaused]);
 
   /** Skipping or ending mid-hold still saves the verified seconds (SKIP / ABORT carry no attempt). */
   const savePartialHold = useCallback(() => {

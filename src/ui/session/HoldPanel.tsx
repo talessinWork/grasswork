@@ -1,4 +1,5 @@
 /** Verified hold (Hold artboard): ring with breath glow + rule chips on top, depth meter / It hurts / mute sheet at the bottom. */
+import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { EvalResult, StretchSpec } from '../../core/types';
 import type { HoldState } from '../../core/session/holdVerifier';
@@ -25,7 +26,7 @@ function ringCaption(hold: HoldState | null): string | undefined {
   }
 }
 
-export function HoldTop({ spec, holdS, result, hold, cue }: { spec: StretchSpec; holdS: number; result: EvalResult | null; hold: HoldState | null; cue: string | null }) {
+function HoldTopImpl({ spec, holdS, result, hold, cue }: { spec: StretchSpec; holdS: number; result: EvalResult | null; hold: HoldState | null; cue: string | null }) {
   const live = hold?.phase === 'holding' && !!result?.valid;
   return (
     <View style={styles.top}>
@@ -63,7 +64,7 @@ interface SheetProps {
   bottom: number;
 }
 
-export function HoldSheet({ spec, result, hold, sessionBest, muted, voiceOn, onHurt, onMute, bottom }: SheetProps) {
+function HoldSheetImpl({ spec, result, hold, sessionBest, muted, voiceOn, onHurt, onMute, bottom }: SheetProps) {
   const better = (a: number, b: number) => (spec.depthBetter === 'higher' ? a > b : a < b);
   let best: number | null = sessionBest;
   if (hold?.bestDepth != null && (best == null || better(hold.bestDepth, best))) best = hold.bestDepth;
@@ -109,3 +110,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 10 },
   hurt: { flex: 1, minHeight: 52 },
 });
+
+/** memoized: the session screen re-renders on phase / live changes, not per frame */
+export const HoldTop = memo(HoldTopImpl);
+export const HoldSheet = memo(HoldSheetImpl);

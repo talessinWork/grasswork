@@ -3,7 +3,7 @@
  * the calibrated floor line is dashed. Landmarks are normalized to the camera image; the preview is
  * drawn with resizeMode "cover", so points are mapped with the same cover crop.
  */
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { Canvas, Circle, DashPathEffect, Group, Line, Path, Skia, vec } from '@shopify/react-native-skia';
 import { LM, type Landmark, type PoseFrame } from '../../core/types';
@@ -74,7 +74,7 @@ export function coverMapper(aspect: number, w: number, h: number, mirror: boolea
   });
 }
 
-export function Skeleton({ frame, valid, floorY, width, height, mirror = false, visible = true }: Props) {
+function SkeletonImpl({ frame, valid, floorY, width, height, mirror = false, visible = true }: Props) {
   const pose = frame?.landmarks ?? null;
   const aspect = frame?.aspect ?? width / Math.max(1, height);
   const map = useMemo(() => coverMapper(aspect, width, height, mirror), [aspect, width, height, mirror]);
@@ -131,3 +131,6 @@ export function Skeleton({ frame, valid, floorY, width, height, mirror = false, 
     </Canvas>
   );
 }
+
+/** memoized: the session screen re-renders on phase / live changes, not per frame */
+export const Skeleton = memo(SkeletonImpl);

@@ -99,7 +99,7 @@ function Morning({ vm, onStart, onBoss }: { vm: HomeVM; onStart(k: SessionKind):
         <SpeechBubble style={styles.bubble}>{line}</SpeechBubble>
       </View>
 
-      {vm.isTestDay && !vm.doneToday && vm.goals.length > 0 && (
+      {vm.isTestDay && vm.goals.length > 0 && (
         <FadeIn>
           <Card tone="forest" onPress={onBoss} accessibilityLabel="Weekly boss is here. Open the weekly test." style={styles.bossCard} gap={4}>
             <Txt variant="eyebrow" color="forestMuted">

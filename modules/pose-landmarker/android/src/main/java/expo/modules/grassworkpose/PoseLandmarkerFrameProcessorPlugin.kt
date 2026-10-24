@@ -109,10 +109,12 @@ class PoseLandmarkerFrameProcessorPlugin(
       return out
     }
 
+    var src: Bitmap? = null
+    var upright: Bitmap? = null
     try {
       // ImageProxy.toBitmap() (CameraX >= 1.3) handles both YUV_420_888 ('yuv') and RGBA_8888 ('rgb').
-      val src = imageProxy.toBitmap()
-      val upright = uprightScaled(src, rotation)
+      src = imageProxy.toBitmap()
+      upright = uprightScaled(src, rotation)
       val mpImage = BitmapImageBuilder(upright).build()
       val result = lm.detectForVideo(mpImage, ts)
       lastTimestampMs = ts
@@ -128,11 +130,13 @@ class PoseLandmarkerFrameProcessorPlugin(
           )
         }
       }
-      if (upright !== src) upright.recycle()
-      src.recycle()
     } catch (e: Exception) {
       lastTimestampMs = ts
       out["error"] = "detect failed: ${e.message}"
+    } finally {
+      // recycle on every path so a throwing frame doesn't leak two bitmaps
+      if (upright != null && upright !== src) upright.recycle()
+      src?.recycle()
     }
     return out
   }

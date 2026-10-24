@@ -1,4 +1,5 @@
 /** Calibrating + framing (Framing artboard): headline hint, ghost outline to stand in, checklist sheet. */
+import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import type { StretchSpec } from '../../core/types';
@@ -32,7 +33,7 @@ function Item({ label, state }: { label: string; state: ItemState }) {
   );
 }
 
-export function SetupHeadline({ setup, calibrating }: { setup: SetupUI; calibrating: boolean }) {
+function SetupHeadlineImpl({ setup, calibrating }: { setup: SetupUI; calibrating: boolean }) {
   const title = setup.hint ?? (calibrating ? 'Stand tall' : 'Looking good');
   return (
     <FadeIn key={title} style={styles.headline}>
@@ -46,7 +47,7 @@ export function SetupHeadline({ setup, calibrating }: { setup: SetupUI; calibrat
   );
 }
 
-export function SetupSheet({ setup, spec, calibrating, bottom }: { setup: SetupUI; spec: StretchSpec | null; calibrating: boolean; bottom: number }) {
+function SetupSheetImpl({ setup, spec, calibrating, bottom }: { setup: SetupUI; spec: StretchSpec | null; calibrating: boolean; bottom: number }) {
   const f = setup.framing;
   const body: ItemState = f?.wholeBody ? 'done' : 'active';
   const light: ItemState = !f ? 'pending' : f.light ? 'done' : f.wholeBody ? 'active' : 'pending';
@@ -75,7 +76,7 @@ export function SetupSheet({ setup, spec, calibrating, bottom }: { setup: SetupU
 }
 
 /** Dashed ghost outline to stand in (shown until a person is detected). */
-export function GhostOutline({ width, height }: { width: number; height: number }) {
+function GhostOutlineImpl({ width, height }: { width: number; height: number }) {
   return (
     <Svg width={width} height={height} viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" style={StyleSheet.absoluteFill} pointerEvents="none">
       <G fill="none" stroke={color.cameraInk} strokeWidth={2} strokeDasharray="7 6" opacity={0.55} strokeLinecap="round">
@@ -106,3 +107,8 @@ const styles = StyleSheet.create({
   dot: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   pending: { width: 20, height: 20, margin: 2, borderRadius: 10, borderWidth: 2, borderColor: color.pending },
 });
+
+/** memoized: the session screen re-renders on phase / live changes, not per frame */
+export const SetupHeadline = memo(SetupHeadlineImpl);
+export const SetupSheet = memo(SetupSheetImpl);
+export const GhostOutline = memo(GhostOutlineImpl);

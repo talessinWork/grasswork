@@ -6,7 +6,7 @@ import { BricolageGrotesque_500Medium, BricolageGrotesque_700Bold } from '@expo-
 import { Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold } from '@expo-google-fonts/figtree';
 import { useFonts } from 'expo-font';
 import * as Notifications from 'expo-notifications';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
@@ -18,11 +18,32 @@ import type { AppServices } from '../src/services/contract';
 import { bootstrapServices } from '../src/ui/bootstrap';
 import { sessionKindFromUrl } from '../src/ui/links';
 import { ServicesProvider, useServices, useSettings } from '../src/ui/ServicesProvider';
+import { isSessionActive } from '../src/ui/sessionActive';
 import { Txt } from '../src/ui/Txt';
 import { color } from '../src/ui/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 SplashScreen.setOptions({ duration: 700, fade: true });
+
+/**
+ * Replaces the handler bootstrapServices() installed via configureNotificationHandler(): same behaviour,
+ * except that while a session screen is mounted reminders are delivered silently (no banner, list entry
+ * or sound over the camera). Must run after bootstrapServices() so it wins.
+ */
+function installSessionAwareNotificationHandler(): void {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => {
+      const show = !isSessionActive();
+      return {
+        shouldShowAlert: show,
+        shouldShowBanner: show,
+        shouldShowList: show,
+        shouldPlaySound: show,
+        shouldSetBadge: false,
+      };
+    },
+  });
+}
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
@@ -37,7 +58,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     bootstrapServices()
-      .then(setServices)
+      .then((s) => {
+        installSessionAwareNotificationHandler();
+        setServices(s);
+      })
       .catch((e) => setBootError(e instanceof Error ? e : new Error(String(e))));
   }, []);
 
@@ -70,6 +94,9 @@ function Gate() {
   const { settings } = useSettings();
   const segments = useSegments();
   const router = useRouter();
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
   const pendingKind = useRef<SessionKind | null>(null);
 
   // splash stays up until settings are known, so the first frame is the right screen
@@ -93,12 +120,15 @@ function Gate() {
     return () => sub.remove();
   }, [services]);
 
-  // notification taps (cold start + while running) → session
+  // notification taps (cold start + while running) → session.
+  // Already on /session (a session running, or a grasswork://session link that just opened it): do nothing,
+  // otherwise a second camera screen would stack on top of the running session.
   const openSession = (kind: SessionKind) => {
     if (!onboarded) {
       pendingKind.current = kind;
       return;
     }
+    if (pathnameRef.current === '/session') return;
     router.push({ pathname: '/session', params: { kind } });
   };
   const openRef = useRef(openSession);
@@ -122,7 +152,7 @@ function Gate() {
     if (onboarded && pendingKind.current) {
       const k = pendingKind.current;
       pendingKind.current = null;
-      router.push({ pathname: '/session', params: { kind: k } });
+      if (pathnameRef.current !== '/session') router.push({ pathname: '/session', params: { kind: k } });
     }
   }, [onboarded, router]);
 

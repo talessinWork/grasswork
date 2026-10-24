@@ -13,12 +13,13 @@ You need a Mac with Xcode for iPhone, or Android Studio for Android. A **develop
 
 ```sh
 npm install
-npm run models          # downloads the two MediaPipe .task models into assets/models/
-npx expo prebuild       # generates ios/ and android/, bundles the models
+npx expo prebuild       # generates ios/ and android/; downloads and bundles the MediaPipe models
 npm run ios             # or: npm run android   (builds and installs on a connected device)
 ```
 
 After the first build, day-to-day JS changes only need `npm start`.
+
+Prebuild downloads the two pose models (~15 MB) into `assets/models/` if they're missing. Behind a proxy or offline, run `npm run models` instead (it uses curl), or set `GRASSWORK_SKIP_MODEL_DOWNLOAD=1` and place the files yourself.
 
 **iOS Simulator** has no camera: in development builds the session screen falls back to a synthetic pose stream (stand → deep squat → stand), so the whole flow can be clicked through.
 
@@ -59,7 +60,7 @@ All logic in `src/core` and `src/services` is pure TypeScript with no React Nati
 
 ```sh
 npm run typecheck:core  # strict tsc over core + services
-npm test                # bun test: 209 tests, incl. multi-day simulated use
+npm test                # bun test: 217 tests, incl. multi-day simulated use
 ```
 
 ## Adding a stretch

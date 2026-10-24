@@ -57,6 +57,8 @@ export const color = {
   rankGlassStrong: 'rgba(250,250,247,0.16)',
   rankGhost: 'rgba(250,250,247,0.4)',
   emberDeep: '#3A2410',
+  /** soft ember on dark grounds: evening streak pill, boss rewards, rank-up XP pill */
+  emberLight: '#F4B888',
   // wilted Gus
   wiltStem: '#7C8A5E',
   wiltLeaf: '#B5A66B',
@@ -77,6 +79,9 @@ export const font = {
 
 export const radius = { sm: 12, md: 16, lg: 20, xl: 24, xxl: 28, pill: 999 } as const;
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
+
+/** Screen side gutter and fixed component sizes from the artboards. */
+export const layout = { gutter: 24, sheetInset: 16, tabBarHeight: 60, buttonHeight: 56, buttonHeightLarge: 60 } as const;
 
 /** Minimum touch target (iOS HIG / Material). */
 export const hit = 44;

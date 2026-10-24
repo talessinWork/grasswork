@@ -25,8 +25,8 @@ export function ServicesProvider({ services, children }: { services: AppServices
   const updateSettings = useCallback(
     async (next: Settings) => {
       setSettings(next);
+      // saveSettings already reschedules reminders
       await services.saveSettings(next);
-      await services.syncReminders(Date.now());
     },
     [services],
   );
